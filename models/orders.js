@@ -2,19 +2,20 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const addressSchema = new Schema({
-  contact_full_name: String,
-  contact_phone_number: String,
-  street: String,
+  contact_full_name: { type: String, required: true },
+  contact_phone_number: { type: String, required: true },
+  street: { type: String, required: true },
   unit_number: String,
-  city: String,
+  city: { type: String, required: true },
   province: { type: String, default: "Ontario" },
   country: { type: String, default: "Canada" },
   postal_code: {
     type: String,
     validate: {
-      validator: (value) => /^\d{5}$/.test(value), // Adjusted regex for 5-digit postal code
+      validator: (value) => /^\d{5}$/.test(value),
       message: "Invalid postal code format",
     },
+    required: true,
   },
   instructions: String,
   primary: { type: Boolean, default: false },
@@ -27,19 +28,20 @@ const packageDetailSchema = new Schema({
 });
 
 const pickupDetailSchema = new Schema({
-  full_name: String,
-  phone_number: String,
-  street: String,
+  full_name: { type: String, required: true },
+  phone_number: { type: String, required: true },
+  street: { type: String, required: true },
   unit_number: String,
-  city: String,
+  city: { type: String, required: true },
   province: { type: String, default: "Ontario" },
   country: { type: String, default: "Canada" },
   postal_code: {
     type: String,
     validate: {
-      validator: (value) => /^\d{5}$/.test(value), // Adjusted regex for 5-digit postal code
+      validator: (value) => /^\d{5}$/.test(value),
       message: "Invalid postal code format",
     },
+    required: true,
   },
   instructions: String,
   pickup_date: Date,
@@ -47,7 +49,7 @@ const pickupDetailSchema = new Schema({
 });
 
 const orderDetailsSchema = new Schema({
-  total_cost: Number,
+  total_cost: { type: Number, default: 0 },
   promo_code: String,
   total_packages: Number,
   extra_packages_included: Number,
@@ -56,8 +58,8 @@ const orderDetailsSchema = new Schema({
 });
 
 const clientDetailsSchema = new Schema({
-  first_name: String,
-  last_name: String,
+  first_name: { type: String, required: true },
+  last_name: { type: String, required: true },
   subscription: String,
   subscription_expiry_date: Date,
   email: String,
@@ -67,8 +69,8 @@ const clientDetailsSchema = new Schema({
 });
 
 const orderSchema = new Schema({
-  order_number: String,
-  order_date: Date,
+  order_number: { type: String, required: true },
+  order_date: { type: Date, default: Date.now },
   status: {
     type: String,
     enum: [
@@ -78,6 +80,7 @@ const orderSchema = new Schema({
       "Delivered",
       "Cancelled",
     ],
+    required: true,
   },
   order_details: orderDetailsSchema,
   client_details: clientDetailsSchema,

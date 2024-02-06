@@ -30,3 +30,34 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({ message: "Error processing request", error });
   }
 };
+
+exports.getOrderById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const order = await Order.findById(id);
+    if (order) {
+      res.status(200).json(order);
+    } else {
+      res.status(404).json({ message: "Order not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving order details", error });
+  }
+};
+
+exports.updateOrder = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const updatedOrder = req.body;
+    const result = await Order.findByIdAndUpdate(id, updatedOrder, {
+      new: true,
+    });
+    if (result) {
+      res.status(200).json({ message: "Order updated successfully" });
+    } else {
+      res.status(404).json({ message: "Order not found or not modified" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error updating order", error });
+  }
+};
