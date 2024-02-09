@@ -74,11 +74,11 @@ const orderSchema = new Schema({
   status: {
     type: String,
     enum: [
-      "Driver received",
+      "Cancelled",
       "Driver on the way",
       "Driver delivered to post office",
       "Delivered",
-      "Cancelled",
+      "Driver received",
     ],
     required: true,
   },
