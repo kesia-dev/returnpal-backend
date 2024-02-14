@@ -7,4 +7,6 @@ node_modules/
 # Ignore compiled files
 *.exe
 *.dll
-*.env
+
+# Ignore local env files
+.env
