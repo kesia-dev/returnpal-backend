@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 
 // TODO: Unsure if I should be using the same schema for every individual file..
+// TODO: Unsure how to save orders in which payment is successful through stripe.
 
 const returnProcessSchema = new mongoose.Schema({
     dateAndTime: {
@@ -78,6 +79,15 @@ const returnProcessSchema = new mongoose.Schema({
     },
     orderConfirmation: {
         order: {
+            order_number: {
+                type: String,
+            },
+            order_date: {
+                type: Date,
+            },
+            order_status: {
+                type: String,
+            },
             name: {
                 type: String,
                 required: true,
@@ -94,18 +104,6 @@ const returnProcessSchema = new mongoose.Schema({
                 type: String,
                 required: true,
             },
-            pickUpDate: {
-                type: Date,
-                required: true,
-            },
-            pickUpMethod: {
-                type: String,
-                required: true,
-            },
-            totalPackages: {
-                type: Number,
-                required: true,
-            },
             cardType: {
                 type: String,
                 required: true,
@@ -115,6 +113,9 @@ const returnProcessSchema = new mongoose.Schema({
                 required: true,
             },
             order_details: {
+                total_cost: {
+                    type: Number,
+                },
                 pickup_date: {
                     type: Date,
                     required: true,
@@ -123,7 +124,19 @@ const returnProcessSchema = new mongoose.Schema({
                     type: String,
                     required: true,
                 },
+                total_packages: {
+                    type: Number,
+                },
+                extra_packages_included: {
+                    type: Number,
+                },
+                promo_code: {
+                    type: String,
+                },
                 pickup_details: {
+                    address_id: {
+                        ObjectId,
+                    },
                     contact_full_name: {
                         type: String,
                         required: true,
