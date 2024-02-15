@@ -112,6 +112,10 @@ const returnProcessSchema = new mongoose.Schema({
                 type: Number,
                 required: true,
             },
+            paymentSuccessful: {
+                type: Boolean,
+                required: true,
+            },
             order_details: {
                 total_cost: {
                     type: Number,
