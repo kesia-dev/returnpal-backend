@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
 // Unsure if I should be using the same schema for every individual file..
 // Unsure how to save orders in which payment is successful through stripe.
