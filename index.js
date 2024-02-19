@@ -4,6 +4,8 @@ const connectToDatabase = require("./config/db");
 const authRouter = require("./routes/authRoute");
 const orderRouter = require("./routes/ordersRoute");
 const paymentRouter = require("./routes/paymentRoute");
+const promocode = require("./routes/promocodeRoute");
+
 const app = express();
 const cors = require("cors");
 app.use(express.json());
@@ -17,6 +19,7 @@ connectToDatabase();
 app.use("/api", authRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/promocode", promocode);
 
 // Start the server
 app.listen(port, () => {
