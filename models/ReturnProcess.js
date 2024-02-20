@@ -30,9 +30,8 @@ const returnProcessSchema = new mongoose.Schema({
             packages: { type: Number, required: true },
         },
     },
-    orderConfirmation: {
-        orderSchema,
-    },
+    image: { type: String, required: true },
+    orderConfirmation: { orderSchema },
 });
 
 // Stripe Schema
