@@ -27,6 +27,10 @@ app.post('/upload', uploadImage.single('file'), (req, res) => {
       res.status(200).send('File uploaded successfully');
     }
   });
+
+  newImage.save()
+    .then(() => res.json('Image uploaded!'))
+    .catch(err => res.status(400).json('Error: ' + err));
 });
 
 // API routes
