@@ -11,6 +11,7 @@ const app = express();
 const cors = require("cors");
 app.use(express.json());
 app.use(cors());
+app.use('/uploads', express.static('uploads'));
 app;
 const port = process.env.PORT || 3000;
 
@@ -18,7 +19,7 @@ connectToDatabase();
 
 app.post('/upload', uploadImage.single('file'), (req, res) => {
   const newImage = new File({ filename: req.file.originalname, path: req.file.path});
-  newFile.save((err, file) => {
+  newImage.save((err, file) => {
     if (err) {
       console.log(err);
       res.status(500).send('There was an error uploading your file');
