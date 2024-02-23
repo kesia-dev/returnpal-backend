@@ -1,6 +1,8 @@
 const path = require('path');
 const multer = require('multer');
 
+// Create API endpoints in Node
+
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, 'uploads/');

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 // ReturnProcessSchema
+// Create API endpoints in Node
 const returnProcessSchema = new mongoose.Schema({
     dateAndTime: { type: Date, required: true },
     deliveryOption: { type: String, required: true },
