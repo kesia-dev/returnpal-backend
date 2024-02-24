@@ -27,5 +27,6 @@ const upload = multer({
             cb(null, false);
         }
     },
-    limits: none,
 });
+
+module.exports = upload;

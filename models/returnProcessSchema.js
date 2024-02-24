@@ -1,8 +1,41 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// ReturnProcessSchema
 // Create API endpoints in Node
+// Stripe Schema
+const orderSchema = new Schema({
+        order_number: { type: String },
+        order_date: { type: Date },
+        order_status: { type: String },
+        name: { type: String, required: true },
+        orderRef: { type: String, required: true },
+        email: { type: String, required: true },
+        location: { type: String, required: true },
+        cardType: { type: String, required: true },
+        cardNumber: { type: Number, required: true },
+        paymentSuccessful: { type: Boolean, required: true },
+        order_details: {
+            total_cost: { type: Number },
+            pickup_date: { type: Date, required: true },
+            pickup_method: { type: String, required: true },
+            total_packages: { type: Number },
+            extra_packages_included: {type: Number },
+            promo_code: { type: String },
+            pickup_details: {   
+                address_id: { type: String, required: true},
+                contact_full_name: { type: String, required: true },
+                contact_phone_number: { type: Number, required: true },
+                unit_number: { type: Number, required: true },
+                street: { type: String, required: true },
+                city: { type: String, required: true },
+                province: { type: String, required: true },
+                country: { type: String, required: true },
+                postal_code: { type: String, required: true },
+                instructions: { type: String, required: true},
+            }
+        }
+    });
+    
 const returnProcessSchema = new mongoose.Schema({
     dateAndTime: { type: Date, required: true },
     deliveryOption: { type: String, required: true },
@@ -35,38 +68,5 @@ const returnProcessSchema = new mongoose.Schema({
     orderConfirmation: { orderSchema },
 });
 
-// Stripe Schema
-const orderSchema = new Schema({
-        order_number: { type: String },
-        order_date: { type: Date },
-        order_status: { type: String },
-        name: { type: String, required: true },
-        orderRef: { type: String, required: true },
-        email: { type: String, required: true },
-        location: { type: String, required: true },
-        cardType: { type: String, required: true },
-        cardNumber: { type: Number, required: true },
-        paymentSuccessful: { type: Boolean, required: true },
-        order_details: {
-            total_cost: { type: Number },
-            pickup_date: { type: Date, required: true },
-            pickup_method: { type: String, required: true },
-            total_packages: { type: Number },
-            extra_packages_included: {type: Number },
-            promo_code: { type: String },
-            pickup_details: {   
-                address_id: { ObjectId },
-                contact_full_name: { type: String, required: true },
-                contact_phone_number: { type: Number, required: true },
-                unit_number: { type: Number, required: true },
-                street: { type: String, required: true },
-                city: { type: String, required: true },
-                province: { type: String, required: true },
-                country: { type: String, required: true },
-                postal_code: { type: String, required: true },
-                instructions: { type: String, required: true},
-            }
-        }
-    });
 
-module.exports = mongoose.model('returnProcess', returnProcessSchema);
+module.exports = mongoose.model('returnProcess', returnProcessSchema, 'orderSchema', orderSchema);
