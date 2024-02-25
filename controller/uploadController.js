@@ -9,6 +9,15 @@ exports.uploadFile = (req, res) => {
   if (path.extname(req.file.originalname).toLowerCase() === ".png" || 
       path.extname(req.file.originalname).toLowerCase() === ".jpg" || 
       path.extname(req.file.originalname).toLowerCase() === ".jpeg") {
+        if (req.body.labelType === 'Physical') {
+          physicalLabel(targetPath);
+        } else if (
+          req.body.labelType === 'Digital') {
+            digitalLabel(targetPath);
+        } else if (
+          req.body.labelType === 'Amazon') {
+            amazonLabel(targetPath);
+        }
     fs.rename(tempPath, targetPath, err => {
       if (err) return console.error(err.message);
       res
