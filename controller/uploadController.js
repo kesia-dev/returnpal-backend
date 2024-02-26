@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-// const File = require('../models/returnProcessSchema');
 
 exports.uploadFile = (req, res) => {
   const tempPath = req.file.path;

@@ -64,8 +64,11 @@ const returnProcessSchema = new mongoose.Schema({
         },
     },
     image: { type: String, required: true },
-    orderConfirmation: { orderSchema },
+    orderConfirmation: orderSchema,
 });
 
 
-module.exports = mongoose.model('returnProcess', returnProcessSchema, 'orderSchema', orderSchema);
+module.exports = {
+    ReturnProcess: mongoose.model('ReturnProcess', returnProcessSchema), 
+    ConfirmOrder: mongoose.model('ConfirmOrder', orderSchema),
+};
