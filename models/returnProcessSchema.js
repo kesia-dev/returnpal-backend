@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// Create API endpoints in Node
 const orderSchema = new Schema({
         order_number: { type: String },
         order_date: { type: Date },
