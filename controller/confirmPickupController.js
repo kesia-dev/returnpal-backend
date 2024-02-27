@@ -1,8 +1,6 @@
-const router = require('express').Router();
-
 const { ConfirmOrder } = require('../models/returnProcessSchema');
 
-router.post('/', async (req, res) => {
+exports.pickup = async (req, res) => {
     try {
         const pickupData = req.body;
         const newPickup = new ConfirmOrder(pickupData);
@@ -11,6 +9,4 @@ router.post('/', async (req, res) => {
     } catch (error) {
         res.status(500).send(error);
     }
-});
-
-module.exports = router; 
+};
