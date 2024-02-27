@@ -6,6 +6,7 @@ const orderRouter = require("./routes/ordersRoute");
 const paymentRouter = require("./routes/paymentRoute");
 const uploadRouter = require('./routes/uploadRoute');
 const confirmPickupRouter = require('./routes/confirmPickupRoute');
+const subscriptionRouter = require('./routes/subscriptionRoute');
 const app = express();
 const cors = require("cors");
 app.use(express.json());
@@ -22,6 +23,7 @@ app.use("/api/orders", orderRouter);
 app.use("/api/payment", paymentRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/confirm-pickup", confirmPickupRouter);
+app.use('/api/choose-plan', subscriptionRouter);
 
 // Start the server
 app.listen(port, () => {
