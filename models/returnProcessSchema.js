@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const orderSchema = new Schema({
+const orderSchema = new mongoose.Schema({
         order_number: { type: String },
         order_date: { type: Date },
         order_status: { type: String },
@@ -33,6 +33,11 @@ const orderSchema = new Schema({
             }
         }
     });
+
+const saveImageSchema = new mongoose.Schema({
+    name: { type: String, require: true},
+    image: { data: Buffer, contentType: String },
+});
     
 const returnProcessSchema = new mongoose.Schema({
     dateAndTime: { type: Date, required: true },
@@ -62,12 +67,13 @@ const returnProcessSchema = new mongoose.Schema({
             packages: { type: Number, required: true },
         },
     },
-    image: { type: String, required: true },
     orderConfirmation: orderSchema,
+    saveImage: saveImageSchema,
 });
 
 
 module.exports = {
     ReturnProcess: mongoose.model('ReturnProcess', returnProcessSchema), 
     ConfirmOrder: mongoose.model('ConfirmOrder', orderSchema),
+    Image: mongoose.model('Image', saveImageSchema),
 };
