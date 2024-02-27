@@ -38,6 +38,16 @@ const saveImageSchema = new mongoose.Schema({
     name: { type: String, require: true},
     image: { data: Buffer, contentType: String },
 });
+
+const subscriptionSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    period: { type: String, required: true },
+    total: { type: String, required: true },
+    duration: { type: String, required: true },
+    speed: { type: String, required: true },
+    support: { type: String, required: true },
+})
     
 const returnProcessSchema = new mongoose.Schema({
     dateAndTime: { type: Date, required: true },
@@ -69,6 +79,7 @@ const returnProcessSchema = new mongoose.Schema({
     },
     orderConfirmation: orderSchema,
     saveImage: saveImageSchema,
+    subscription: subscriptionSchema,
 });
 
 
@@ -76,4 +87,5 @@ module.exports = {
     ReturnProcess: mongoose.model('ReturnProcess', returnProcessSchema), 
     ConfirmOrder: mongoose.model('ConfirmOrder', orderSchema),
     Image: mongoose.model('Image', saveImageSchema),
+    Subscription: mongoose.model('Subscription', subscriptionSchema),
 };
