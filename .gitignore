@@ -8,4 +8,5 @@ node_modules/
 *.exe
 *.dll
 
+# Ignore local env files
 .env
