@@ -1,4 +1,7 @@
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = require("express");
+const express = require("stripe");
+
+process.env.STRIPE_SECRET_KEY;
 
 exports.charge = async (req, res) => {
   try {
