@@ -7,5 +7,14 @@ router.post('/register', authController.register);
 
 router.post('/login', authController.login);
 
+router.post('/verify/:id', authController.verify);
+
+router.post('/forgot', authController.forgotPassword);
+
+router.post('/reset/:token', authController.resetPassword);
+
+router.get('/users', authController.users); // added this route for testing purposes. Can be removed. 
+
+router.post('/authorize', authController.authorize);
 
 module.exports = router;
