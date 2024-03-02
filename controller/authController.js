@@ -31,8 +31,6 @@ exports.users = async (req, res) => {
 };
 
 exports.register = async (req, res) => {
-    console.log("Register called"); //print register for testing
-
     try {
         const {
             firstName,
@@ -46,7 +44,6 @@ exports.register = async (req, res) => {
             password,
         } = req.body;
         const existingUser = await findExistingUser(email);
-
         if (existingUser) {
             return res.status(409).json({ error: "User already exists" });
         }
@@ -68,7 +65,7 @@ exports.register = async (req, res) => {
         await user.save();
 
         const subject = "ReturnPal - Verify your email";
-        const link = `${BASE_URL}/signin?token=${user._id}`;
+        const link = `${BASE_URL}/verify?token=${user._id}`;
         const body =
             "Hello,<br> Please click on the link to verify your email.<br> <a href=" +
             link +
@@ -83,23 +80,21 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-    console.log("Login called"); //print login for testing
     try {
         const { email, password } = req.body;
-
         const user = await findExistingUser(email);
 
         if (!user) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ error: "Invalid email or password." });
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ error: "Invalid email or password." });
         }
 
         if (!user.isActive) {
-            return res.status(400).json({ error: "Not Validated" });
+            return res.status(400).json({ error: "Please verify your email." });
         }
 
         const token = jwt.sign({ userId: user._id }, JWT_SECRET);
@@ -116,23 +111,20 @@ exports.verify = async (req, res) => {
 
         await User.updateOne({ _id: id }, { isActive: true });
 
-        return res.status(201).json({ message: "User verified successfully" });
+    const token = jwt.sign({ userId: id }, JWT_SECRET);
+    
+        return res.status(201).json({ userId: id, token, message: "User verified successfully" });
     } catch (error) {
         return res.status(500).json({ error: "Server error" });
     }
 };
 
 exports.forgotPassword = async (req, res) => {
-    console.log("Forgot Password called"); //print forgot for testing
-
     try {
         const { email } = req.body;
-
         const token = jwt.sign({ email }, "passwordReset");
 
         await updateUser(email, { passwordResetToken: token });
-
-        const { passwordResetToken } = await findExistingUser(email);
 
         const link = `${BASE_URL}/reset?token=${token}`;
         const subject = "ReturnPal - Reset your password";
@@ -150,7 +142,6 @@ exports.forgotPassword = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-    console.log("Reset Password called"); //print reset for testing
     try {
         const { email, password } = req.body;
         const { token } = req.params;
