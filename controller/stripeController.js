@@ -1,8 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const PromoCode = require("../models/promocode");
 const { v4: uuidv4 } = require("uuid");
-const { ConfirmOrder } = require('../models/returnProcessSchema');
+const axios = require("axios");
+const { ConfirmOrder } = require("../models/returnProcessSchema");
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 class Order {
@@ -76,10 +78,44 @@ function getAdditionalBoxPrice(products, prices) {
     return matchingPrice.id;
 }
 
-function saveConfirmedOrder(order) {
-    console.log("SAVING DATA");
-    console.log(order.data);
+async function saveConfirmedOrder(order) {
+    const { data } = order;
+    const { metadata } = data.checkoutData;
+    const { checkoutRefId } = data.checkoutData;
 
+    const subscription = JSON.parse(metadata.subscription);
+    subscription.expiryDate = new Date(subscription.expiryDate);
+
+    const orderDetails = JSON.parse(metadata.orderDetails);
+    const promoCode = metadata.promoCode ?? "";
+    const { pickupDetails } = orderDetails;
+
+    const orderToSave = {
+        orderId: checkoutRefId,
+        invoiceNumber: data.invoiceData.invoiceNumber,
+        orderDate: new Date(),
+        orderStatus: "Driver received",
+        orderDetails: {
+            userId: orderDetails.userId,
+            totalCost: data.invoiceData.total,
+            totalPackages: orderDetails.totalPackages,
+            extraPackages: orderDetails.extraPackages,
+            pickupDate: new Date(orderDetails.pickupDate),
+            pickupMethod: orderDetails.pickupMethod,
+            promoCode,
+            pickupDetails,
+        },
+        subscription,
+    };
+
+    try {
+        await axios.post(
+            "http://localhost:4200/api/confirm-pickup",
+            orderToSave
+        );
+    } catch (err) {
+        console.error(err);
+    }
     // once completed, remove from in-memory array
     removeOrder(order.id);
 }
@@ -117,6 +153,7 @@ exports.success = async (req, res) => {
             // Save the invoice number for saving into MongoDB
             order.setInvoiceData({
                 invoiceNumber: session.number,
+                total: session.total,
             });
             order.setInvoiceSucceeded(true);
             console.log("INVOICE PAYMENT SUCCEDED");
@@ -153,77 +190,106 @@ exports.success = async (req, res) => {
 };
 
 exports.charge = async (req, res) => {
-  const { amount, receipt_email, promoCode } = req.body;
-  let chargeAmount = amount;
+    const { order_details, discount, subscription } = req.body;
+    const promoCode = discount?.promoCode ?? "";
+    const matchingPromoCode = await PromoCode.findOne({ promoCode });
 
-  if (promoCode && promoCodes[promoCode]) {
-    const promoDetails = promoCodes[promoCode];
-    const discountPercentage = promoDetails.discountPercentage;
-    const discountAmount = (amount * discountPercentage) / 100;
-    chargeAmount -= discountAmount;
-  }
+    const promoCodesRes = await stripe.coupons.list();
+    const promoCodes = promoCodesRes.data;
 
-  const product = await stripe.products.create({
-    name: "P1",
-  });
+    const productsRes = await stripe.products.list();
+    const pricesRes = await stripe.prices.list();
 
-  const price = await stripe.prices.create({
-    unit_amount: chargeAmount * 100,
-    currency: "cad",
-    product: product.id,
-  });
+    const products = productsRes.data;
+    const prices = pricesRes.data;
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    line_items: [
-      {
-        price: price.id,
-        quantity: 1,
-      },
-    ],
-    mode: "payment",
-    metadata: {
-      promoCode: promoCode || "No promo code applied",
-    },
-    success_url: `http://localhost:3000`,
-    cancel_url: `http://localhost:3000//schedule-pickup`,
-  });
+    const matchingProduct = products.find(
+        (product) =>
+            product.name.toLowerCase() === subscription.type.toLowerCase()
+    );
+    const matchingPrice = prices.find(
+        (price) => price.product === matchingProduct.id
+    );
 
-  res.json({ id: session.id });
+    const checkoutRefId = uuidv4();
+    const session = await stripe.checkout.sessions.create({
+        cancel_url: `http://localhost:3000/schedule-pickup?success=false`,
+        client_reference_id: checkoutRefId,
+        currency: "CAD",
+        discounts: [
+            {
+                coupon:
+                    promoCodes.find(
+                        (promo) =>
+                            promo.name.toLowerCase() == promoCode.toLowerCase()
+                    )?.id ?? undefined,
+            },
+        ],
+        invoice_creation: {
+            enabled:
+                matchingProduct.name.toLowerCase() == "bronze"
+                    ? true
+                    : undefined,
+        },
+        line_items: [
+            {
+                price: matchingPrice.id,
+                quantity: 1,
+            },
+            order_details.extra_packages_included
+                ? {
+                      price: getAdditionalBoxPrice(products, prices),
+                      quantity: order_details.extra_packages_included,
+                  }
+                : undefined,
+        ],
+        mode:
+            subscription.type.toLowerCase() === "bronze"
+                ? "payment"
+                : "subscription",
+        metadata: {
+            promoCode: promoCode || undefined,
+            subscription: JSON.stringify({
+                type: subscription.type,
+                expiryDate: subscription.expiryDate,
+                price: matchingPrice.unit_amount,
+            }),
+            orderDetails: JSON.stringify({
+                userId: order_details.pickup_details.user_id,
+                totalPackages: String(order_details.total_packages),
+                extraPackages: String(order_details.extra_packages_included),
+                pickupDate: order_details.pickup_date,
+                pickupMethod: order_details.pickup_method,
+                pickupDetails: {
+                    city: order_details.pickup_details.city,
+                    name: order_details.pickup_details.contact_full_name,
+                    phoneNumber:
+                        order_details.pickup_details.contact_phone_number,
+                    country: order_details.pickup_details.country,
+                    instructions:
+                        order_details.pickup_details.instructions ?? "",
+                    postalCode: order_details.pickup_details.postal_code,
+                    province: order_details.pickup_details.province,
+                    address: order_details.pickup_details.street,
+                    unit: order_details.pickup_details.unit_number ?? "",
+                },
+            }),
+        },
+        payment_method_types: ["card"],
+        success_url: `http://localhost:3000/confirmation/${checkoutRefId}`,
+    });
+
+    res.json({ id: session.id });
 };
 
-exports.getOrderDetails  = async (req, res) => {
-  try {
-    const  {orderRef}  = req.body;
-    const result = await ConfirmOrder.findOne({ orderRef:orderRef });
-    console.log(result)
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-}
-/**
- * things to save in the database
- * order id - checkout session id
- * order reference number - provided by stripe
- * order status - already done
- * order date
- * order_details
- * - total cost
- * - pickup date
- * - pickup method
- * - total packages
- * - extra packages
- * - promocode
- * - pickup_details
- * - - user (reference user model)
- * - - phone number
- * - - unit number
- * - - street
- * - - city
- * - - province
- * - - country
- * - - postal code
- * - - instructions
- */
+exports.getOrderDetails = async (req, res) => {
+    try {
+        const { orderRef } = req.body;
+        const result = await ConfirmOrder.findOne({ orderRef: orderRef });
+        console.log(result);
+        res.json(result);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};

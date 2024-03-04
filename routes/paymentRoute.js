@@ -9,6 +9,6 @@ router.post(
     express.raw({ type: "application/json" }),
     paymentController.success
 );
-router.post("/orderDetails",express.json(),getOrderDetails?.getOrderDetails);
+router.post("/orderDetails", express.json(), getOrderDetails?.getOrderDetails);
 
 module.exports = router;
