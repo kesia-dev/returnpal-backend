@@ -51,8 +51,8 @@ exports.updateOrder = async (req, res) => {
   const { id } = req.params;
   try {
     const updatedOrder = req.body;
-    const result = await ConfirmOrder.findByIdAndUpdate(id, updatedOrder, {
-      new: true,
+    const result = await ConfirmOrder.findByIdAndUpdate(id,{
+      order_status: 'cancel',
     });
     if (result) {
       res.status(200).json({ message: "Order updated successfully" });
