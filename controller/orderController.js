@@ -1,15 +1,14 @@
-const Order = require("../models/orders");
-
+const { ConfirmOrder } = require('../models/returnProcessSchema');
 exports.getOrders = async (req, res) => {
   const pageSize = 20;
   const page = parseInt(req.query.page) || 1;
   try {
     const skip = (page - 1) * pageSize;
-    const orders = await Order.find({})
+    const orders = await ConfirmOrder.find({})
       .sort({ order_date: -1 })
       .skip(skip)
       .limit(pageSize);
-    const totalOrdersCount = await Order.countDocuments({});
+    const totalOrdersCount = await ConfirmOrder.countDocuments({});
     const totalPages = Math.ceil(totalOrdersCount / pageSize);
     res.status(200).json({
       paginatedOrders: orders,
@@ -25,7 +24,7 @@ exports.getOrders = async (req, res) => {
 exports.createOrder = async (req, res) => {
   try {
     const newOrder = req.body;
-    const order = await Order.create(newOrder);
+    const order = await ConfirmOrder.create(newOrder);
     res
       .status(200)
       .json({ message: "Order created successfully", id: order._id });
@@ -37,7 +36,7 @@ exports.createOrder = async (req, res) => {
 exports.getOrderById = async (req, res) => {
   const { id } = req.params;
   try {
-    const order = await Order.findById(id);
+    const order = await ConfirmOrder.findById(id);
     if (order) {
       res.status(200).json(order);
     } else {
@@ -52,7 +51,7 @@ exports.updateOrder = async (req, res) => {
   const { id } = req.params;
   try {
     const updatedOrder = req.body;
-    const result = await Order.findByIdAndUpdate(id, updatedOrder, {
+    const result = await ConfirmOrder.findByIdAndUpdate(id, updatedOrder, {
       new: true,
     });
     if (result) {
