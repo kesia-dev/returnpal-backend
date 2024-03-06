@@ -190,10 +190,9 @@ exports.success = async (req, res) => {
 };
 
 exports.charge = async (req, res) => {
-    const { order_details, discount, subscription } = req.body;
+    const { orderDetails, discount, subscription } = req.body;
     const promoCode = discount?.promoCode ?? "";
     const matchingPromoCode = await PromoCode.findOne({ promoCode });
-
     const promoCodesRes = await stripe.coupons.list();
     const promoCodes = promoCodesRes.data;
 
@@ -236,10 +235,10 @@ exports.charge = async (req, res) => {
                 price: matchingPrice.id,
                 quantity: 1,
             },
-            order_details.extra_packages_included
+            orderDetails.extraPackages
                 ? {
                       price: getAdditionalBoxPrice(products, prices),
-                      quantity: order_details.extra_packages_included,
+                      quantity: orderDetails.extraPackages,
                   }
                 : undefined,
         ],
@@ -255,23 +254,21 @@ exports.charge = async (req, res) => {
                 price: matchingPrice.unit_amount,
             }),
             orderDetails: JSON.stringify({
-                userId: order_details.pickup_details.user_id,
-                totalPackages: String(order_details.total_packages),
-                extraPackages: String(order_details.extra_packages_included),
-                pickupDate: order_details.pickup_date,
-                pickupMethod: order_details.pickup_method,
+                userId: orderDetails.userId,
+                totalPackages: String(orderDetails.totalPackages),
+                extraPackages: String(orderDetails.extraPackages),
+                pickupDate: orderDetails.pickupDate,
+                pickupMethod: orderDetails.pickupMethod,
                 pickupDetails: {
-                    city: order_details.pickup_details.city,
-                    name: order_details.pickup_details.contact_full_name,
-                    phoneNumber:
-                        order_details.pickup_details.contact_phone_number,
-                    country: order_details.pickup_details.country,
-                    instructions:
-                        order_details.pickup_details.instructions ?? "",
-                    postalCode: order_details.pickup_details.postal_code,
-                    province: order_details.pickup_details.province,
-                    address: order_details.pickup_details.street,
-                    unit: order_details.pickup_details.unit_number ?? "",
+                    city: orderDetails.pickupDetails.city,
+                    name: orderDetails.pickupDetails.name,
+                    phoneNumber: orderDetails.pickupDetails.phoneNumber,
+                    country: orderDetails.pickupDetails.country,
+                    instructions: orderDetails.pickupDetails.instructions ?? "",
+                    postalCode: orderDetails.pickupDetails.postalCode,
+                    province: orderDetails.pickupDetails.province,
+                    address: orderDetails.pickupDetails.address,
+                    unit: orderDetails.pickupDetails.unit ?? "",
                 },
             }),
         },
@@ -285,7 +282,7 @@ exports.charge = async (req, res) => {
 exports.getOrderDetails = async (req, res) => {
     try {
         const { orderRef } = req.body;
-        const result = await ConfirmOrder.findOne({ orderRef: orderRef });
+        const result = await ConfirmOrder.findOne({ orderId: orderRef });
         console.log(result);
         res.json(result);
     } catch (error) {

@@ -24,7 +24,7 @@ app.use(express.json());
 // API routes
 app.use("/api", authRouter);
 app.use("/api/orders", orderRouter);
-app.use("/api/upload", uploadRouter);
+app.use("/api/return-labels", uploadRouter);
 app.use("/api/confirm-pickup", confirmPickupRouter);
 app.use("/api/choose-plan", subscriptionRouter);
 app.use("/api/promocode", promocode);

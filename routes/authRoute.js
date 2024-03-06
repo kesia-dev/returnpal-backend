@@ -1,20 +1,21 @@
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const authController = require('../controller/authController');
+const authController = require("../controller/authController");
 
-router.post('/register', authController.register);
+router.post("/register", authController.register);
 
-router.post('/login', authController.login);
+router.post("/login", authController.login);
 
-router.post('/verify/:id', authController.verify);
+router.post("/verify/:id", authController.verify);
 
-router.post('/forgot', authController.forgotPassword);
+router.post("/forgot", authController.forgotPassword);
 
-router.post('/reset/:token', authController.resetPassword);
+router.post("/reset/:token", authController.resetPassword);
 
-router.get('/users', authController.users); // added this route for testing purposes. Can be removed. 
+router.get("/users", authController.users); // added this route for testing purposes. Can be removed.
 
-router.post('/authorize', authController.authorize);
+router.get("/users/:id", authController.userById);
+
+router.post("/authorize", authController.authorize);
 
 module.exports = router;
