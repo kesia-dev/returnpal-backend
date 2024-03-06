@@ -31,7 +31,8 @@ const orderSchema = new mongoose.Schema({
                 postal_code: { type: String, required: true },
                 instructions: { type: String, required: true},
             }
-        }
+        },
+        client_details: { subscription_expiry_data, type: Date },
     });
 
 const saveImageSchema = new mongoose.Schema({
