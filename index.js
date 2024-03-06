@@ -8,6 +8,7 @@ const uploadRouter = require("./routes/uploadRoute");
 const confirmPickupRouter = require("./routes/confirmPickupRoute");
 const subscriptionRouter = require("./routes/subscriptionRoute");
 const promocode = require("./routes/promocodeRoute");
+const sendMail = require("./routes/sendMailRoute");
 
 const app = express();
 const cors = require("cors");
@@ -28,6 +29,7 @@ app.use("/api/upload", uploadRouter);
 app.use("/api/confirm-pickup", confirmPickupRouter);
 app.use("/api/choose-plan", subscriptionRouter);
 app.use("/api/promocode", promocode);
+app.use("/api/sendmail", sendMail);
 
 // Start the server
 app.listen(port, () => {

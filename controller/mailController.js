@@ -29,5 +29,6 @@ exports.sendMail = async (to, subject, body) => {
     console.log("SendMail success");
   } catch (err) {
     console.log("SendMail error", { err })
+    throw new Error("Error occurred while sending email");
   } 
 }
