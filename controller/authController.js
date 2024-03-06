@@ -30,6 +30,22 @@ exports.users = async (req, res) => {
     } catch (err) {}
 };
 
+exports.userById = async (req, res) => {
+    const { id } = req.params;
+    if (!id) {
+        return res
+            .status(401)
+            .json({ error: "Id was not provided for a user" });
+    }
+
+    try {
+        const user = await User.findOne({ _id: id });
+        return res.status(200).json(user);
+    } catch (err) {
+        console.error(err);
+    }
+};
+
 exports.register = async (req, res) => {
     try {
         const {
@@ -85,12 +101,16 @@ exports.login = async (req, res) => {
         const user = await findExistingUser(email);
 
         if (!user) {
-            return res.status(401).json({ error: "Invalid email or password." });
+            return res
+                .status(401)
+                .json({ error: "Invalid email or password." });
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(401).json({ error: "Invalid email or password." });
+            return res
+                .status(401)
+                .json({ error: "Invalid email or password." });
         }
 
         if (!user.isActive) {
@@ -111,9 +131,11 @@ exports.verify = async (req, res) => {
 
         await User.updateOne({ _id: id }, { isActive: true });
 
-    const token = jwt.sign({ userId: id }, JWT_SECRET);
-    
-        return res.status(201).json({ userId: id, token, message: "User verified successfully" });
+        const token = jwt.sign({ userId: id }, JWT_SECRET);
+
+        return res
+            .status(201)
+            .json({ userId: id, token, message: "User verified successfully" });
     } catch (error) {
         return res.status(500).json({ error: "Server error" });
     }
