@@ -9,6 +9,8 @@ const confirmPickupRouter = require("./routes/confirmPickupRoute");
 const subscriptionRouter = require("./routes/subscriptionRoute");
 const promocode = require("./routes/promocodeRoute");
 const sendMail = require("./routes/sendMailRoute");
+const googlesheet = require("./routes/googleSheetRoute");
+
 
 const app = express();
 const cors = require("cors");
@@ -30,6 +32,8 @@ app.use("/api/confirm-pickup", confirmPickupRouter);
 app.use("/api/choose-plan", subscriptionRouter);
 app.use("/api/promocode", promocode);
 app.use("/api/sendmail", sendMail);
+app.use("/api/updategooglesheet", googlesheet);
+
 
 // Start the server
 app.listen(port, () => {

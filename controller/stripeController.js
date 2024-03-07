@@ -116,6 +116,15 @@ async function saveConfirmedOrder(order) {
     } catch (err) {
         console.error(err);
     }
+    try {
+        await axios.post(
+            "http://localhost:4200/api/updategooglesheet",
+            orderToSave
+        );
+    } catch (err) {
+        console.error(err);
+    }
+    
     // once completed, remove from in-memory array
     removeOrder(order.id);
 }
