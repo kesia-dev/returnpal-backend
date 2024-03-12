@@ -1,65 +1,76 @@
-const { ConfirmOrder } = require('../models/returnProcessSchema');
+const { ConfirmOrder } = require("../models/returnProcessSchema");
 exports.getOrders = async (req, res) => {
-  const pageSize = 20;
-  const page = parseInt(req.query.page) || 1;
-  try {
-    const skip = (page - 1) * pageSize;
-    const orders = await ConfirmOrder.find({})
-      .sort({ order_date: -1 })
-      .skip(skip)
-      .limit(pageSize);
-    const totalOrdersCount = await ConfirmOrder.countDocuments({});
-    const totalPages = Math.ceil(totalOrdersCount / pageSize);
-    res.status(200).json({
-      paginatedOrders: orders,
-      currentPage: page,
-      totalPages,
-      totalOrders: totalOrdersCount,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error processing request", error });
-  }
+    const pageSize = 20;
+    const page = parseInt(req.query.page) || 1;
+    try {
+        const skip = (page - 1) * pageSize;
+        const orders = await ConfirmOrder.find({})
+            .populate("orderDetails.pickupDetails")
+            .populate("orderDetails.user")
+            .sort({ orderDate: -1 })
+            .skip(skip)
+            .limit(pageSize);
+        const totalOrdersCount = await ConfirmOrder.countDocuments({});
+        const totalPages = Math.ceil(totalOrdersCount / pageSize);
+        res.status(200).json({
+            paginatedOrders: orders,
+            currentPage: page,
+            totalPages,
+            totalOrders: totalOrdersCount,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error processing request", error });
+    }
 };
 
 exports.createOrder = async (req, res) => {
-  try {
-    const newOrder = req.body;
-    const order = await ConfirmOrder.create(newOrder);
-    res
-      .status(200)
-      .json({ message: "Order created successfully", id: order._id });
-  } catch (error) {
-    res.status(500).json({ message: "Error processing request", error });
-  }
+    try {
+        const newOrder = req.body;
+        const order = await ConfirmOrder.create(newOrder);
+        res.status(200).json({
+            message: "Order created successfully",
+            id: order._id,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error processing request", error });
+    }
 };
 
 exports.getOrderById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const order = await ConfirmOrder.findById(id);
-    if (order) {
-      res.status(200).json(order);
-    } else {
-      res.status(404).json({ message: "Order not found" });
+    const { id } = req.params;
+    try {
+        const order = await ConfirmOrder.findById({ orderId: id });
+        if (order) {
+            res.status(200).json(order);
+        } else {
+            res.status(404).json({ message: "Order not found" });
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "Error retrieving order details",
+            error,
+        });
     }
-  } catch (error) {
-    res.status(500).json({ message: "Error retrieving order details", error });
-  }
 };
 
 exports.updateOrder = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const updatedOrder = req.body;
-    const result = await ConfirmOrder.findByIdAndUpdate(id,{
-      order_status: 'cancel',
-    });
-    if (result) {
-      res.status(200).json({ message: "Order updated successfully" });
-    } else {
-      res.status(404).json({ message: "Order not found or not modified" });
+    const { id } = req.params;
+    try {
+        const updatedOrder = req.body;
+        const result = await ConfirmOrder.findByIdAndUpdate(
+            { orderId: id },
+            {
+                order_status: "cancel",
+            }
+        );
+        if (result) {
+            res.status(200).json({ message: "Order updated successfully" });
+        } else {
+            res.status(404).json({
+                message: "Order not found or not modified",
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Error updating order", error });
     }
-  } catch (error) {
-    res.status(500).json({ message: "Error updating order", error });
-  }
 };

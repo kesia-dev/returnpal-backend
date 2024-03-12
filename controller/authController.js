@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const mailer = require("./mailController");
+const { Address } = require("../models/returnProcessSchema");
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 const JWT_SECRET = process.env.JWT_SECRET ?? "PLEASE SET JWT SECRET KEY";
@@ -70,14 +71,24 @@ exports.register = async (req, res) => {
             firstName,
             lastName,
             email,
-            phoneNumber,
-            address,
-            suiteNo,
-            city,
-            postalCode,
             password: hashedPassword,
         });
+        await user.save();
 
+        // Save the primary address address
+        const primaryAddress = new Address({
+            user: user._id,
+            name: `${firstName} ${lastName}`,
+            phoneNumber,
+            unit: suiteNo,
+            address,
+            city,
+            postalCode,
+            isPrimary: true,
+        });
+        await primaryAddress.save();
+
+        user.addresses.push(primaryAddress._id);
         await user.save();
 
         const subject = "ReturnPal - Verify your email";

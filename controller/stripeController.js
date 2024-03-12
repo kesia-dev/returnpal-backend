@@ -1,10 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const PromoCode = require("../models/promocode");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
-const { ConfirmOrder } = require("../models/returnProcessSchema");
+const { ConfirmOrder, Address } = require("../models/returnProcessSchema");
+const PromoCode = require("../models/promocode");
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 class Order {
@@ -96,7 +96,7 @@ async function saveConfirmedOrder(order) {
         orderDate: new Date(),
         orderStatus: "Driver received",
         orderDetails: {
-            userId: orderDetails.userId,
+            user: orderDetails.user,
             totalCost: data.invoiceData.total,
             totalPackages: orderDetails.totalPackages,
             extraPackages: orderDetails.extraPackages,
@@ -124,7 +124,7 @@ async function saveConfirmedOrder(order) {
     } catch (err) {
         console.error(err);
     }
-    
+
     // once completed, remove from in-memory array
     removeOrder(order.id);
 }
@@ -165,7 +165,7 @@ exports.success = async (req, res) => {
                 total: session.total,
             });
             order.setInvoiceSucceeded(true);
-            console.log("INVOICE PAYMENT SUCCEDED");
+            // console.log("INVOICE PAYMENT SUCCEDED");
             if (isOrderComplete(order.id)) {
                 saveConfirmedOrder(order);
             }
@@ -185,7 +185,7 @@ exports.success = async (req, res) => {
                 checkoutRefId: session.client_reference_id,
             });
             order.setCheckoutCompleted(true);
-            console.log("CHECKOUT COMPLETED");
+            // console.log("CHECKOUT COMPLETED");
             if (isOrderComplete(order.id)) {
                 saveConfirmedOrder(order);
             }
@@ -199,7 +199,7 @@ exports.success = async (req, res) => {
 };
 
 exports.charge = async (req, res) => {
-    const { orderDetails, discount, subscription } = req.body;
+    const { orderDetails, discount, subscription, addressId } = req.body;
     const promoCode = discount?.promoCode ?? "";
     const matchingPromoCode = await PromoCode.findOne({ promoCode });
     const promoCodesRes = await stripe.coupons.list();
@@ -263,22 +263,12 @@ exports.charge = async (req, res) => {
                 price: matchingPrice.unit_amount,
             }),
             orderDetails: JSON.stringify({
-                userId: orderDetails.userId,
+                user: orderDetails.user,
                 totalPackages: String(orderDetails.totalPackages),
                 extraPackages: String(orderDetails.extraPackages),
                 pickupDate: orderDetails.pickupDate,
                 pickupMethod: orderDetails.pickupMethod,
-                pickupDetails: {
-                    city: orderDetails.pickupDetails.city,
-                    name: orderDetails.pickupDetails.name,
-                    phoneNumber: orderDetails.pickupDetails.phoneNumber,
-                    country: orderDetails.pickupDetails.country,
-                    instructions: orderDetails.pickupDetails.instructions ?? "",
-                    postalCode: orderDetails.pickupDetails.postalCode,
-                    province: orderDetails.pickupDetails.province,
-                    address: orderDetails.pickupDetails.address,
-                    unit: orderDetails.pickupDetails.unit ?? "",
-                },
+                pickupDetails: addressId,
             }),
         },
         payment_method_types: ["card"],
@@ -291,8 +281,9 @@ exports.charge = async (req, res) => {
 exports.getOrderDetails = async (req, res) => {
     try {
         const { orderRef } = req.body;
-        const result = await ConfirmOrder.findOne({ orderId: orderRef });
-        console.log(result);
+        const result = await ConfirmOrder.findOne({
+            orderId: orderRef,
+        }).populate("orderDetails.pickupDetails");
         res.json(result);
     } catch (error) {
         console.error("Error fetching data:", error);

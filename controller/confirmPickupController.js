@@ -1,5 +1,6 @@
 const { ConfirmOrder } = require("../models/returnProcessSchema");
 const { ReturnLabel } = require("../models/returnProcessSchema");
+const mongoose = require("mongoose");
 
 exports.pickup = async (req, res) => {
     try {
@@ -9,8 +10,8 @@ exports.pickup = async (req, res) => {
 
         // Modify the related return labels
         await ReturnLabel.updateMany(
-            { userId: pickupData.orderDetails.userId, orderId: null },
-            { orderId: pickupData.orderId }
+            { userId: newPickup.orderDetails.user, orderId: null },
+            { orderId: newPickup._id }
         );
 
         res.status(201).send(newPickup);

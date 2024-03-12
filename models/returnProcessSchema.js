@@ -15,7 +15,7 @@ const orderSchema = new mongoose.Schema({
         ],
     },
     orderDetails: {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         totalCost: { type: Number, required: true },
         pickupDate: { type: Date, required: true },
         pickupMethod: {
@@ -27,15 +27,9 @@ const orderSchema = new mongoose.Schema({
         extraPackages: { type: Number, required: true },
         promoCode: { type: String },
         pickupDetails: {
-            name: { type: String, required: true },
-            phoneNumber: { type: String, required: true },
-            unit: { type: String },
-            address: { type: String, required: true },
-            city: { type: String, required: true },
-            province: { type: String, required: true },
-            country: { type: String, required: true },
-            postalCode: { type: String, required: true },
-            instructions: { type: String },
+            type: mongoose.Schema.ObjectId,
+            ref: "Address",
+            required: true,
         },
     },
     subscription: {
@@ -104,7 +98,22 @@ const returnProcessSchema = new mongoose.Schema({
     subscription: subscriptionSchema,
 });
 
+const addressSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    name: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    unit: { type: String },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    province: { type: String, default: "Ontario", required: true },
+    country: { type: String, default: "Canada", required: true },
+    postalCode: { type: String, required: true },
+    instructions: { type: String },
+    isPrimary: { type: Boolean, default: false },
+});
+
 module.exports = {
+    Address: mongoose.model("Address", addressSchema),
     ReturnProcess: mongoose.model("ReturnProcess", returnProcessSchema),
     ConfirmOrder: mongoose.model("ConfirmOrder", orderSchema),
     ReturnLabel: mongoose.model("ReturnLabel", returnLabelSchema),
