@@ -11,7 +11,9 @@ const subscriptionRouter = require("./routes/subscriptionRoute");
 const promocode = require("./routes/promocodeRoute");
 const sendMail = require("./routes/sendMailRoute");
 const googlesheet = require("./routes/googleSheetRoute");
-
+const passport = require('passport');
+const session = require('express-session');
+const passportConfig = require('./utils/passport');
 const app = express();
 const cors = require("cors");
 app.use(cors({ origin: "*" })); // REMOVE LATER THE ORIGIN *
@@ -21,6 +23,16 @@ app;
 const port = process.env.PORT || 3000;
 
 connectToDatabase();
+
+app.use(session({
+    secret: 'c24e45cb63310811e8cabc4026919dc39f0bdd65f18af20fdf477782ba4c195f',
+    resave: false,
+    saveUninitialized: true
+  }));
+  
+  app.use(passport.initialize());
+  app.use(passport.session());
+  
 
 app.use("/api/payment", paymentRouter);
 app.use(express.json());

@@ -2,16 +2,30 @@ const { ConfirmOrder } = require("../models/returnProcessSchema");
 exports.getOrders = async (req, res) => {
     const pageSize = 20;
     const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage) || 10;
+    console.log(req.query);
     try {
-        const skip = (page - 1) * pageSize;
-        const orders = await ConfirmOrder.find({})
+        const skip = (page - 1) * perPage;
+        const obj = {};
+        if (req.query.date) {
+            const date = new Date(req.query.date);
+            let date1 = new Date(req.query.date);
+            date1.setDate(date1.getDate() + 1);
+
+            obj.orderDate = {
+                "$gte": date.toISOString(),
+                "$lte": date1.toISOString()
+            }
+        }
+        console.log(obj, ' obj');
+        const orders = await ConfirmOrder.find(obj)
             .populate("orderDetails.pickupDetails")
             .populate("orderDetails.user")
             .sort({ orderDate: -1 })
             .skip(skip)
-            .limit(pageSize);
-        const totalOrdersCount = await ConfirmOrder.countDocuments({});
-        const totalPages = Math.ceil(totalOrdersCount / pageSize);
+            .limit(perPage);
+        const totalOrdersCount = await ConfirmOrder.countDocuments(obj);
+        const totalPages = Math.ceil(totalOrdersCount / perPage);
         res.status(200).json({
             paginatedOrders: orders,
             currentPage: page,
@@ -19,6 +33,7 @@ exports.getOrders = async (req, res) => {
             totalOrders: totalOrdersCount,
         });
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: "Error processing request", error });
     }
 };

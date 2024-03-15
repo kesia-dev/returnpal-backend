@@ -283,9 +283,7 @@ exports.getOrderDetails = async (req, res) => {
         const { orderRef } = req.body;
         const result = await ConfirmOrder.findOne({
             orderId: orderRef,
-        })
-            .populate("orderDetails.pickupDetails")
-            .populate("orderDetails.user");
+        }).populate("orderDetails.pickupDetails");
         res.json(result);
     } catch (error) {
         console.error("Error fetching data:", error);

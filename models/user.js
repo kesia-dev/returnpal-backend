@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
     // },
     password: {
         type: String,
-        required: true,
+        required: false,
     },
     isActive: {
         type: Boolean,
@@ -49,6 +49,14 @@ const userSchema = new mongoose.Schema({
         default: false,
     },
     passwordResetToken: {
+        type: String,
+        required: false,
+    },
+    profilePic: {
+        type: String,
+        required: false,
+    },
+    provider: {
         type: String,
         required: false,
     },

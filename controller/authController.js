@@ -28,7 +28,7 @@ exports.users = async (req, res) => {
     try {
         const users = await User.find();
         return res.status(200).json({ users });
-    } catch (err) {}
+    } catch (err) { }
 };
 
 exports.userById = async (req, res) => {
@@ -219,5 +219,78 @@ exports.authorize = async (req, res) => {
         return res.status(401).json({ message: "Unauthorized" });
     } catch (err) {
         return res.status(500).json({ error: "Authentication Error" });
+    }
+};
+
+
+exports.updateUser = async (req, res) => {
+    try {
+        let {
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            address,
+            password,
+        } = req.body;
+        const id = req.params.id
+        if (!id) {
+            return res
+                .status(401)
+                .json({ error: "Id was not provided for a user" });
+        }
+        const existingUser = await User.findOne({ _id: id });
+        if (!existingUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+        if (!isPasswordValid) {
+            password = await bcrypt.hash(password, 10);
+        }
+
+        existingUser.firstName = firstName;
+        existingUser.lastName = lastName;
+        existingUser.email = email;
+        existingUser.password = password;
+        existingUser.phoneNumber = phoneNumber;
+        await existingUser.save();
+
+
+        return res
+            .status(200)
+            .json({ message: "User saved successfully", existingUser });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+exports.googleLogin = async (req, res) => {
+    try {
+        const {
+            displayName,
+            photos,
+            provider,
+            emails,
+            name
+        } = req.user.profile;
+        const existingUser = await findExistingUser(emails[0]?.value);
+        if (existingUser) {
+            const token = jwt.sign({ userId: existingUser._id }, JWT_SECRET);
+            return { status: true, user: existingUser, token };
+        }
+        const user = new User({
+            username: emails[0]?.value,
+            profilePic: photos[0]?.value,
+            provider,
+            email: emails[0]?.value,
+            firstName: name.familyName,
+            lastName: name.givenName,
+        });
+        await user.save();
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET);
+        return { status: false, user, token };
+    } catch (error) {
+        console.log(error, ' error in google login save');
+        return { status: true, error };
     }
 };
