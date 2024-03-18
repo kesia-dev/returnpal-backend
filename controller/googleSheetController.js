@@ -2,13 +2,11 @@ const { google } = require("googleapis");
 const { Address } = require("../models/returnProcessSchema");
 const fs = require("fs");
 const moment = require("moment");
-// const credentials = JSON.parse(
-//     ''
-//     // fs.readFileSync(
-//     //     "/Users/jasontan/code/internships/returnpal/returnpal-backend/config/returnpal.json"
-//     // )
-// );
-const credentials = ''
+const credentials = JSON.parse(
+    fs.readFileSync(
+        "/home/mypc/Music/returnpal-backend/config/returnpal.json"
+    )
+);
 const googleAuth = new google.auth.JWT(
     credentials.client_email,
     null,

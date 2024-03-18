@@ -71,7 +71,7 @@ exports.register = async (req, res) => {
             firstName,
             lastName,
             email,
-            password: hashedPassword,
+            password
         });
         await user.save();
 
@@ -117,8 +117,8 @@ exports.login = async (req, res) => {
                 .json({ error: "Invalid email or password." });
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
+        // const isPasswordValid = password, user.password);
+        if (user.password ===password) {
             return res
                 .status(401)
                 .json({ error: "Invalid email or password." });

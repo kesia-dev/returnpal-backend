@@ -1,3 +1,4 @@
+const { Address } = require('../models/returnProcessSchema');
 const { ConfirmOrder } = require("../models/returnProcessSchema");
 exports.getOrders = async (req, res) => {
     const pageSize = 20;
@@ -54,9 +55,11 @@ exports.createOrder = async (req, res) => {
 exports.getOrderById = async (req, res) => {
     const { id } = req.params;
     try {
-        const order = await ConfirmOrder.findById({ orderId: id });
+        const order = await ConfirmOrder.findById({ _id : id });
         if (order) {
-            res.status(200).json(order);
+            const pickupDetailsId = order?.orderDetails?.pickupDetails;
+            const pickupDetails = await Address.findById(pickupDetailsId);
+            res.status(200).json({ order, pickupDetails });
         } else {
             res.status(404).json({ message: "Order not found" });
         }
@@ -73,7 +76,7 @@ exports.updateOrder = async (req, res) => {
     try {
         const updatedOrder = req.body;
         const result = await ConfirmOrder.findByIdAndUpdate(
-            { orderId: id },
+            { _id: id },
             {
                 order_status: "cancel",
             }

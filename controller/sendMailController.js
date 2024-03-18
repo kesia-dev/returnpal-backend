@@ -5,7 +5,7 @@ exports.sendmail = async (req, res) => {
        const {email,firstName,lastName,message}=req.body;
         const body =
             `${firstName} ${lastName} <br> ${message} <br> user email : ${email}`
-     await mailer.sendMail('info@where2visit.com', subject, body);;
+     await mailer.sendMail('Info@returnpal.ca', subject, body);;
         res.json({message:"SendMail success"});
       } catch (err) {
         throw Error("Error occurred while sending email");
