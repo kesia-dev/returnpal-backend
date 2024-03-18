@@ -283,8 +283,8 @@ exports.googleLogin = async (req, res) => {
             profilePic: photos[0]?.value,
             provider,
             email: emails[0]?.value,
-            firstName: name.familyName,
-            lastName: name.givenName,
+            firstName: name?.familyName,
+            lastName: name?.givenName,
         });
         await user.save();
         const token = jwt.sign({ userId: user._id }, JWT_SECRET);

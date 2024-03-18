@@ -4,7 +4,7 @@ const fs = require("fs");
 const moment = require("moment");
 const credentials = JSON.parse(
     fs.readFileSync(
-        "/home/mypc/Music/returnpal-backend/config/returnpal.json"
+        require('path').resolve(__dirname, "../config/returnpal.json")
     )
 );
 const googleAuth = new google.auth.JWT(

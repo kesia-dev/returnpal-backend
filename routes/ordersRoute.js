@@ -4,6 +4,8 @@ const orderController = require("../controller/orderController");
 
 router.get("/", orderController.getOrders);
 
+router.get("/count", orderController.getOrdersCountByUserId);
+
 router.post("/", orderController.createOrder);
 
 router.get("/:id", orderController.getOrderById);

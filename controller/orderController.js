@@ -4,10 +4,14 @@ exports.getOrders = async (req, res) => {
     const pageSize = 20;
     const page = parseInt(req.query.page) || 1;
     const perPage = parseInt(req.query.perPage) || 10;
-    console.log(req.query);
+    const userId = req.query.userId;
     try {
         const skip = (page - 1) * perPage;
         const obj = {};
+
+        if (userId) {
+            obj['orderDetails.user'] = userId
+        }
         if (req.query.date) {
             const date = new Date(req.query.date);
             let date1 = new Date(req.query.date);
@@ -33,6 +37,18 @@ exports.getOrders = async (req, res) => {
             totalPages,
             totalOrders: totalOrdersCount,
         });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Error processing request", error });
+    }
+};
+
+exports.getOrdersCountByUserId = async (req, res) => {
+
+    try {
+        const orders = await ConfirmOrder.countDocuments({ 'orderDetails.user': req.query.userId })
+
+        res.status(200).json({orders});
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Error processing request", error });

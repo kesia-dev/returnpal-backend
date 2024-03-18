@@ -34,7 +34,7 @@ router.get('/auth/google/callback',
         if (data.status && data.error) {
             res.redirect(process.env.REDIRECT_URL_FAILURE);
         }
-        res.redirect(`${process.env.REDIRECT_URL_SUCCESS}?token=${data.token}&_id=${data.user._id}&access_token=${req.user.access_token}`);
+        res.redirect(`${process.env.REDIRECT_URL_SUCCESS}?token=${data?.token}&_id=${data?.user?._id}&access_token=${req?.user?.access_token}`);
     });
 
 module.exports = router;

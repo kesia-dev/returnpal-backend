@@ -72,10 +72,10 @@ function getAdditionalBoxPrice(products, prices) {
         (product) => product.name.toLowerCase() == "additional box"
     );
     const matchingPrice = prices.find(
-        (price) => price.product === matchingProduct.id
+        (price) => price.product === matchingProduct?.id
     );
 
-    return matchingPrice.id;
+    return matchingPrice?.id;
 }
 
 async function saveConfirmedOrder(order) {
@@ -199,83 +199,88 @@ exports.success = async (req, res) => {
 };
 
 exports.charge = async (req, res) => {
-    const { orderDetails, discount, subscription, addressId } = req.body;
-    const promoCode = discount?.promoCode ?? "";
-    const matchingPromoCode = await PromoCode.findOne({ promoCode });
-    const promoCodesRes = await stripe.coupons.list();
-    const promoCodes = promoCodesRes.data;
+    try {
+        const { orderDetails, discount, subscription, addressId } = req.body;
+        const promoCode = discount?.promoCode ?? "";
+        const matchingPromoCode = await PromoCode.findOne({ promoCode });
+        const promoCodesRes = await stripe.coupons.list();
+        const promoCodes = promoCodesRes.data;
 
-    const productsRes = await stripe.products.list();
-    const pricesRes = await stripe.prices.list();
+        const productsRes = await stripe.products.list();
+        const pricesRes = await stripe.prices.list();
 
-    const products = productsRes.data;
-    const prices = pricesRes.data;
+        const products = productsRes.data;
+        const prices = pricesRes.data;
 
-    const matchingProduct = products.find(
-        (product) =>
-            product.name.toLowerCase() === subscription.type.toLowerCase()
-    );
-    const matchingPrice = prices.find(
-        (price) => price.product === matchingProduct.id
-    );
+        const matchingProduct = products.find(
+            (product) =>
+                product.name.toLowerCase() === subscription.type.toLowerCase()
+        );
+        const matchingPrice = prices.find(
+            (price) => price.product === matchingProduct.id
+        );
 
-    const checkoutRefId = uuidv4();
-    const session = await stripe.checkout.sessions.create({
-        cancel_url: `http://localhost:3000/schedule-pickup?success=false`,
-        client_reference_id: checkoutRefId,
-        currency: "CAD",
-        discounts: [
-            {
-                coupon:
-                    promoCodes.find(
-                        (promo) =>
-                            promo.name.toLowerCase() == promoCode.toLowerCase()
-                    )?.id ?? undefined,
+        const checkoutRefId = uuidv4();
+        const session = await stripe.checkout.sessions.create({
+            cancel_url: `http://localhost:3000/schedule-pickup?success=false`,
+            client_reference_id: checkoutRefId,
+            currency: "CAD",
+            discounts: [
+                {
+                    coupon:
+                        promoCodes.find(
+                            (promo) =>
+                                promo.name.toLowerCase() == promoCode.toLowerCase()
+                        )?.id ?? undefined,
+                },
+            ],
+            invoice_creation: {
+                enabled:
+                    matchingProduct.name.toLowerCase() == "bronze"
+                        ? true
+                        : undefined,
             },
-        ],
-        invoice_creation: {
-            enabled:
-                matchingProduct.name.toLowerCase() == "bronze"
-                    ? true
+            line_items: [
+                {
+                    price: matchingPrice.id,
+                    quantity: 1,
+                },
+                orderDetails.extraPackages
+                    ? {
+                        price: getAdditionalBoxPrice(products, prices),
+                        quantity: orderDetails.extraPackages,
+                    }
                     : undefined,
-        },
-        line_items: [
-            {
-                price: matchingPrice.id,
-                quantity: 1,
+            ],
+            mode:
+                subscription.type.toLowerCase() === "bronze"
+                    ? "payment"
+                    : "subscription",
+            metadata: {
+                promoCode: promoCode || undefined,
+                subscription: JSON.stringify({
+                    type: subscription.type,
+                    expiryDate: subscription.expiryDate,
+                    price: matchingPrice.unit_amount,
+                }),
+                orderDetails: JSON.stringify({
+                    user: orderDetails.user,
+                    totalPackages: String(orderDetails.totalPackages),
+                    extraPackages: String(orderDetails.extraPackages),
+                    pickupDate: orderDetails.pickupDate,
+                    pickupMethod: orderDetails.pickupMethod,
+                    pickupDetails: addressId,
+                }),
             },
-            orderDetails.extraPackages
-                ? {
-                      price: getAdditionalBoxPrice(products, prices),
-                      quantity: orderDetails.extraPackages,
-                  }
-                : undefined,
-        ],
-        mode:
-            subscription.type.toLowerCase() === "bronze"
-                ? "payment"
-                : "subscription",
-        metadata: {
-            promoCode: promoCode || undefined,
-            subscription: JSON.stringify({
-                type: subscription.type,
-                expiryDate: subscription.expiryDate,
-                price: matchingPrice.unit_amount,
-            }),
-            orderDetails: JSON.stringify({
-                user: orderDetails.user,
-                totalPackages: String(orderDetails.totalPackages),
-                extraPackages: String(orderDetails.extraPackages),
-                pickupDate: orderDetails.pickupDate,
-                pickupMethod: orderDetails.pickupMethod,
-                pickupDetails: addressId,
-            }),
-        },
-        payment_method_types: ["card"],
-        success_url: `http://localhost:3000/confirmation/${checkoutRefId}`,
-    });
+            payment_method_types: ["card"],
+            success_url: `http://localhost:3000/confirmation/${checkoutRefId}`,
+        });
 
-    res.json({ id: session.id });
+        res.json({ id: session.id });
+    } catch (error) {
+        console.log(error,'  here is errro ');
+        res.status(500).json("Internal server error")
+    }
 };
 
 exports.getOrderDetails = async (req, res) => {
