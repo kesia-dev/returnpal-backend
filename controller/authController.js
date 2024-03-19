@@ -41,7 +41,13 @@ exports.userById = async (req, res) => {
 
     try {
         const user = await User.findOne({ _id: id });
-        return res.status(200).json(user);
+        for (const addressId of user.addresses) {
+            const address = await Address.findOne({ _id: addressId, isPrimary: true });
+            if (address) {
+                return res.status(200).json({user,address});
+            }
+        }
+        console.log(user)
     } catch (err) {
         console.error(err);
     }
@@ -196,7 +202,7 @@ exports.resetPassword = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         await updateUser(email, {
-            password: hashedPassword,
+            password: password,
             passwordResetToken: null,
         });
 
@@ -239,26 +245,26 @@ exports.updateUser = async (req, res) => {
                 .status(401)
                 .json({ error: "Id was not provided for a user" });
         }
-        const existingUser = await User.findOne({ _id: id });
-        if (!existingUser) {
-            return res.status(404).json({ error: "User not found" });
-        }
-        const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-        if (!isPasswordValid) {
-            password = await bcrypt.hash(password, 10);
-        }
-
-        existingUser.firstName = firstName;
-        existingUser.lastName = lastName;
-        existingUser.email = email;
-        existingUser.password = password;
-        existingUser.phoneNumber = phoneNumber;
-        await existingUser.save();
-
-
+        const user = await User.findOne({ _id: id });
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.email = email;
+        user.password = password;
+        await user.save();
+        await Address.findOneAndUpdate(
+            { user: id, isPrimary:true }, // Filter criteria
+            { $set: {  phoneNumber:phoneNumber,
+                address:address} }, // Update operation
+            { new: true } // Optional parameter to return the updated document
+        );
+        const addressDetails = await Address.findOne({ user: id, isPrimary:true });
         return res
             .status(200)
-            .json({ message: "User saved successfully", existingUser });
+            .json({ message: "User saved successfully",
+            data: {
+                user: user,
+                addressDetails: addressDetails
+            }  });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
